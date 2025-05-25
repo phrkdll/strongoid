@@ -2,7 +2,7 @@ package strongoid
 
 import "encoding/json"
 
-func (id *Id[T]) MarshalJSON() ([]byte, error) {
+func (id Id[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(id.Inner)
 }
 
