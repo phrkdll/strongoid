@@ -1,4 +1,4 @@
-# StrongoID
+# Strongoid
 
 A simple approach to strongly typed IDs in Go.
 
@@ -17,5 +17,5 @@ import (
     "github.com/phrkdll/strongoid"
 )
 
-type UserId = StrongId[int64]
+type UserId = strongoid.Id[int64]
 ```
