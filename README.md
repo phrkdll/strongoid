@@ -1,21 +1,27 @@
-# Strongoid
+# strongoid
 
-A simple approach to strongly typed IDs in Go.
+A simple approach to strongly typed IDs in Go. Avoid confusing IDs because all of them have the same primitive type.
 
-Usage:
+## Usage
+
 
 Get the dependency:
 ```shell
 go get github.com/phrkdll/strongoid
 ```
 
-Then in your code, import and create a custome type based on the Id type provided by this package:
-```golang
+Then in your code, import and create a custom type based on the Id type provided by this package:
+```go
 package main
 
 import (
     "github.com/phrkdll/strongoid"
 )
 
-type UserId = strongoid.Id[int64]
+type UserId strongoid.Id[int64]
+```
+
+Add generator comment anywhere in your code to enable generated JSON un-/marshalling for all your strongly typed IDs.
+```go
+//go:generate go run github.com/phrkdll/strongoid/cmd/gen
 ```
