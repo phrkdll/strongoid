@@ -7,8 +7,7 @@ type IdConstraints interface {
 }
 
 // A base struct for strongly typed IDs
-// To trigger the marshaller below, instead new type, define an alias like this:
-// "type MyStronglyTypedId = StrongId[int]"
+// "type MyStronglyTypedId StrongId[int]"
 type Id[T IdConstraints] struct {
 	Inner T
 }
