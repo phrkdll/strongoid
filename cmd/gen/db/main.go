@@ -11,11 +11,11 @@ import (
 )
 
 {{ range .Types }}
-func (t {{ . }}) Scan(dbValue any) error {
+func (t *{{ . }}) Scan(dbValue any) error {
 	return strongoid.Id[int64](t).Scan(dbValue)
 }
 
-func (t *{{ . }}) Value() (driver.Value, error) {
+func (t {{ . }}) Value() (driver.Value, error) {
 	return (*strongoid.Id[int64])(t).Value()
 }
 {{ end }}
