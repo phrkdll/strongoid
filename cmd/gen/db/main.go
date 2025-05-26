@@ -7,7 +7,7 @@ package {{ .Package }}
 
 import (
 	"database/sql/driver"
-	"github.com/phrkdll/strongoid"
+	"github.com/phrkdll/strongoid/pkg/strongoid"
 )
 
 {{ range .Types }}
