@@ -7,12 +7,11 @@ import (
 	"go/token"
 	"html/template"
 	"os"
-	"strings"
 )
 
-type templateData struct {
-	Package string
-	Types   []string
+type TypeInfo struct {
+	Name     string // i.e. "UserId"
+	BaseType string // i.e. "int64", "string"
 }
 
 func Generate(methodTemplate, outputFileName string) {
@@ -26,7 +25,7 @@ func Generate(methodTemplate, outputFileName string) {
 	}
 
 	var pkgName string
-	var foundTypes []string
+	var foundTypes []TypeInfo
 
 	for name, pkg := range pkgs {
 		pkgName = name // use directory name as package name
@@ -41,25 +40,35 @@ func Generate(methodTemplate, outputFileName string) {
 					if !ok {
 						continue
 					}
-					// look for underlying type expressions
-					ident, ok := ts.Type.(*ast.IndexExpr)
+
+					idxExpr, ok := ts.Type.(*ast.IndexExpr)
 					if !ok {
 						continue
 					}
-					// check if base type is strongoid.Id
-					sel, ok := ident.X.(*ast.SelectorExpr)
-					if !ok {
+
+					// Check selector expression: strongoid.Id
+					selExpr, ok := idxExpr.X.(*ast.SelectorExpr)
+					if !ok || selExpr.Sel.Name != "Id" {
 						continue
 					}
-					if sel.Sel.Name != "Id" {
-						continue
-					}
-					pkgIdent, ok := sel.X.(*ast.Ident)
+					pkgIdent, ok := selExpr.X.(*ast.Ident)
 					if !ok || pkgIdent.Name != "strongoid" {
 						continue
 					}
-					// matched: type MyType strongoid.Id[...]
-					foundTypes = append(foundTypes, ts.Name.Name)
+
+					// Base type: the [T] part
+					var baseType string
+					switch bt := idxExpr.Index.(type) {
+					case *ast.Ident:
+						baseType = bt.Name
+					default:
+						continue
+					}
+
+					foundTypes = append(foundTypes, TypeInfo{
+						Name:     ts.Name.Name,
+						BaseType: baseType,
+					})
 				}
 			}
 		}
@@ -70,25 +79,32 @@ func Generate(methodTemplate, outputFileName string) {
 		return
 	}
 
-	// write generated file
-	f, err := os.Create(outputFileName)
+	f, err := os.Create("zz_generated_strongoid_json.go")
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
+		err := f.Close()
+		if err != nil {
 			panic(err)
 		}
 	}()
 
 	tmpl := template.Must(template.New("json").Parse(methodTemplate))
-	err = tmpl.Execute(f, templateData{
+	err = tmpl.Execute(f, struct {
+		Package string
+		Types   []TypeInfo
+	}{
 		Package: pkgName,
 		Types:   foundTypes,
 	})
+
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Generated '"+outputFileName+"' for IDs:", strings.Join(foundTypes, ", "))
+	fmt.Println("Generated '" + outputFileName + "' for IDs:")
+	for _, t := range foundTypes {
+		fmt.Printf("- %s based on %s\n", t.Name, t.BaseType)
+	}
 }

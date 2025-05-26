@@ -8,12 +8,12 @@ package {{ .Package }}
 import "github.com/phrkdll/strongoid/pkg/strongoid"
 
 {{ range .Types }}
-func (t {{ . }}) MarshalJSON() ([]byte, error) {
-	return strongoid.Id[int64](t).MarshalJSON()
+func (t {{ .Name }}) MarshalJSON() ([]byte, error) {
+	return strongoid.Id[{{ .BaseType }}](t).MarshalJSON()
 }
 
-func (t *{{ . }}) UnmarshalJSON(data []byte) error {
-	return (*strongoid.Id[int64])(t).UnmarshalJSON(data)
+func (t *{{ .Name }}) UnmarshalJSON(data []byte) error {
+	return (*strongoid.Id[{{ .BaseType }}])(t).UnmarshalJSON(data)
 }
 {{ end }}
 `
