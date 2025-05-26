@@ -79,7 +79,7 @@ func Generate(methodTemplate, outputFileName string) {
 		return
 	}
 
-	f, err := os.Create("zz_generated_strongoid_json.go")
+	f, err := os.Create(outputFileName)
 	if err != nil {
 		panic(err)
 	}
