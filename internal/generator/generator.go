@@ -14,10 +14,10 @@ type TypeInfo struct {
 	BaseType string // i.e. "int64", "string"
 }
 
-type templateData struct {
-	Package string
-	Types   []string
-}
+// type templateData struct {
+// 	Package string
+// 	Types   []string
+// }
 
 func Generate(methodTemplate, outputFileName string) {
 	dir := "." // current directory
@@ -88,7 +88,12 @@ func Generate(methodTemplate, outputFileName string) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	tmpl := template.Must(template.New("json").Parse(methodTemplate))
 	err = tmpl.Execute(f, struct {
