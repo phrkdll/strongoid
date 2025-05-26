@@ -14,11 +14,6 @@ type TypeInfo struct {
 	BaseType string // i.e. "int64", "string"
 }
 
-// type templateData struct {
-// 	Package string
-// 	Types   []string
-// }
-
 func Generate(methodTemplate, outputFileName string) {
 	dir := "." // current directory
 	fset := token.NewFileSet()
