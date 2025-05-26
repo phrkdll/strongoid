@@ -12,11 +12,11 @@ import (
 
 {{ range .Types }}
 func (t *{{ . }}) Scan(dbValue any) error {
-	return strongoid.Id[int64](t).Scan(dbValue)
+	return (*strongoid.Id[int64])(t).Scan(dbValue)
 }
 
 func (t {{ . }}) Value() (driver.Value, error) {
-	return (*strongoid.Id[int64])(t).Value()
+	return strongoid.Id[int64](t).Value()
 }
 {{ end }}
 `
