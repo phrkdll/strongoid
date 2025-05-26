@@ -75,13 +75,20 @@ func Generate(methodTemplate, outputFileName string) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	tmpl := template.Must(template.New("json").Parse(methodTemplate))
-	tmpl.Execute(f, templateData{
+	err = tmpl.Execute(f, templateData{
 		Package: pkgName,
 		Types:   foundTypes,
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println("Generated '"+outputFileName+"' for IDs:", strings.Join(foundTypes, ", "))
 }

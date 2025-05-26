@@ -16,7 +16,7 @@ Then in your code, import and create a custom type based on the Id type provided
 package main
 
 import (
-    "github.com/phrkdll/strongoid"
+    "github.com/phrkdll/strongoid/pkg/strongoid"
 )
 
 type UserId strongoid.Id[int64]
