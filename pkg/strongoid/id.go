@@ -1,13 +1,11 @@
 package strongoid
 
-import "github.com/google/uuid"
-
+// Allowed inner types for strongly typed IDs
 type IdConstraints interface {
-	int64 | string | uuid.UUID
+	int64 | string
 }
 
-// A base struct for strongly typed IDs
-// "type MyStronglyTypedId StrongId[int]"
+// Base struct for strongly typed IDs
 type Id[T IdConstraints] struct {
 	Inner T
 }
