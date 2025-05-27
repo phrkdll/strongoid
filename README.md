@@ -25,7 +25,7 @@ type UserId strongoid.Id[int64]
 Add generator comment in your code (within the package that contains your IDs) to enable generated JSON un-/marshalling for all your strongly typed IDs.
 
 ```go
-//go:generate go run github.com/phrkdll/strongoid/cmd/gen
+//go:generate go run github.com/phrkdll/strongoid/cmd/gen --modules=json,gorm
 ```
 
 Execute the following to generate code:

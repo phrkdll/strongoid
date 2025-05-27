@@ -5,106 +5,132 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"html/template"
 	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
 )
 
 type TypeInfo struct {
-	Name     string // i.e. "UserId"
-	BaseType string // i.e. "int64", "string"
+	Name     string
+	BaseType string
 }
 
-func Generate(methodTemplate, outputFileName string) {
-	dir := "." // current directory
-	fset := token.NewFileSet()
+type FileTypes struct {
+	File    string
+	Package string
+	Imports []string
+	Types   []TypeInfo
+}
 
-	pkgs, err := parser.ParseDir(fset, dir, nil, 0)
+func Generate(methodTemplates, imports []string) {
+	dir := "."
+
+	fset := token.NewFileSet()
+	files, err := filepath.Glob(filepath.Join(dir, "*.go"))
 	if err != nil {
-		fmt.Println("parse error:", err)
-		os.Exit(1)
+		panic(err)
 	}
 
-	var pkgName string
-	var foundTypes []TypeInfo
+	fileMap := map[string]*FileTypes{}
 
-	for name, pkg := range pkgs {
-		pkgName = name // use directory name as package name
-		for _, f := range pkg.Files {
-			for _, decl := range f.Decls {
-				genDecl, ok := decl.(*ast.GenDecl)
-				if !ok || genDecl.Tok != token.TYPE {
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") || strings.HasSuffix(file, ".gen.go") {
+			continue
+		}
+
+		node, err := parser.ParseFile(fset, file, nil, 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not parse %s: %v\n", file, err)
+			continue
+		}
+
+		var collected []TypeInfo
+		for _, decl := range node.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range genDecl.Specs {
+				ts, ok := spec.(*ast.TypeSpec)
+				if !ok {
 					continue
 				}
-				for _, spec := range genDecl.Specs {
-					ts, ok := spec.(*ast.TypeSpec)
-					if !ok {
-						continue
-					}
 
-					idxExpr, ok := ts.Type.(*ast.IndexExpr)
-					if !ok {
-						continue
-					}
-
-					// Check selector expression: strongoid.Id
-					selExpr, ok := idxExpr.X.(*ast.SelectorExpr)
-					if !ok || selExpr.Sel.Name != "Id" {
-						continue
-					}
-					pkgIdent, ok := selExpr.X.(*ast.Ident)
-					if !ok || pkgIdent.Name != "strongoid" {
-						continue
-					}
-
-					// Base type: the [T] part
-					var baseType string
-					switch bt := idxExpr.Index.(type) {
-					case *ast.Ident:
-						baseType = bt.Name
-					default:
-						continue
-					}
-
-					foundTypes = append(foundTypes, TypeInfo{
-						Name:     ts.Name.Name,
-						BaseType: baseType,
-					})
+				idxExpr, ok := ts.Type.(*ast.IndexExpr)
+				if !ok {
+					continue
 				}
+
+				selExpr, ok := idxExpr.X.(*ast.SelectorExpr)
+				if !ok || selExpr.Sel.Name != "Id" {
+					continue
+				}
+				pkgIdent, ok := selExpr.X.(*ast.Ident)
+				if !ok || pkgIdent.Name != "strongoid" {
+					continue
+				}
+
+				var baseType string
+				switch bt := idxExpr.Index.(type) {
+				case *ast.Ident:
+					baseType = bt.Name
+				case *ast.SelectorExpr:
+					pkg := bt.X.(*ast.Ident).Name
+					sel := bt.Sel.Name
+					baseType = pkg + "." + sel
+				default:
+					continue
+				}
+
+				collected = append(collected, TypeInfo{
+					Name:     ts.Name.Name,
+					BaseType: baseType,
+				})
+			}
+		}
+
+		if len(collected) > 0 {
+			fileMap[file] = &FileTypes{
+				File:    file,
+				Package: node.Name.Name,
+				Imports: imports,
+				Types:   collected,
 			}
 		}
 	}
 
-	if len(foundTypes) == 0 {
-		fmt.Println("No strongoid.Id-based types found.")
-		return
-	}
+	// Generate for each source file
+	for src, fileData := range fileMap {
+		genFile := strings.TrimSuffix(src, ".go") + ".gen.go"
 
-	f, err := os.Create(outputFileName)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		err := f.Close()
+		f, err := os.Create(genFile)
 		if err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", genFile, err)
+			continue
 		}
-	}()
 
-	tmpl := template.Must(template.New("json").Parse(methodTemplate))
-	err = tmpl.Execute(f, struct {
-		Package string
-		Types   []TypeInfo
-	}{
-		Package: pkgName,
-		Types:   foundTypes,
-	})
+		for _, mt := range methodTemplates {
 
-	if err != nil {
-		panic(err)
+			tmpl := template.Must(template.New("json").Parse(mt))
+
+			err = tmpl.Execute(f, fileData)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Template error on %s: %v\n", genFile, err)
+				_ = f.Close()
+				continue
+			}
+		}
+
+		_ = f.Close()
+		fmt.Printf("Generated %s for: %s\n", genFile, joinTypeNames(fileData.Types))
 	}
+}
 
-	fmt.Println("Generated '" + outputFileName + "' for IDs:")
-	for _, t := range foundTypes {
-		fmt.Printf("- %s based on %s\n", t.Name, t.BaseType)
+func joinTypeNames(types []TypeInfo) string {
+	var names []string
+	for _, t := range types {
+		names = append(names, t.Name)
 	}
+	return strings.Join(names, ", ")
 }
