@@ -24,8 +24,12 @@ type UserId strongoid.Id[int64]
 //go:generate go run github.com/phrkdll/strongoid/cmd/gen --modules=json,gorm
 ```
 
-The generator comment enables generated code for all your strongly typed IDs.
+The generator comment enables generated code for integrating your strongly typed IDs.
 This needs to be done once within each package that contains IDs that you want to generate code for.
+
+Integrations are currently supported for:
+- [JSON](https://pkg.go.dev/encoding/json) (MarshalJSON / UnmarshalJSON)
+- [GORM](https://gorm.io/) (Scan / Value)
 
 To generate code, execute the following command in your project's root folder:
 
