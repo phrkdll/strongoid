@@ -112,7 +112,7 @@ func Generate(methodTemplates, imports []string) {
 
 		for _, mt := range methodTemplates {
 
-			tmpl := template.Must(template.New("json").Parse(mt))
+			tmpl := template.Must(template.New("strongoid").Parse(mt))
 
 			err = tmpl.Execute(f, fileData)
 			if err != nil {
@@ -123,7 +123,7 @@ func Generate(methodTemplates, imports []string) {
 		}
 
 		_ = f.Close()
-		fmt.Printf("Generated %s for: %s\n", genFile, joinTypeNames(fileData.Types))
+		fmt.Printf("Generated '%s' for %s in '%s'\n", genFile, joinTypeNames(fileData.Types), src)
 	}
 }
 
