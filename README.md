@@ -20,15 +20,14 @@ import (
 )
 
 type UserId strongoid.Id[int64]
-```
 
-Add generator comment in your code (within the package that contains your IDs) to enable generated JSON un-/marshalling for all your strongly typed IDs.
-
-```go
 //go:generate go run github.com/phrkdll/strongoid/cmd/gen --modules=json,gorm
 ```
 
-Execute the following to generate code:
+The generator comment enables generated code for all your strongly typed IDs.
+This needs to be done once within each package that contains IDs that you want to generate code for.
+
+To generate code, execute the following command in your project's root folder:
 
 ```shell
 go generate ./...
