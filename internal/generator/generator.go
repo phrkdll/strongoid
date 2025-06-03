@@ -79,7 +79,20 @@ func Generate(methodTemplates, imports []string) {
 					pkg := bt.X.(*ast.Ident).Name
 					sel := bt.Sel.Name
 					baseType = pkg + "." + sel
+				case *ast.StarExpr:
+					switch inner := bt.X.(type) {
+					case *ast.Ident:
+						baseType = "*" + inner.Name
+					case *ast.SelectorExpr:
+						pkg := inner.X.(*ast.Ident).Name
+						sel := inner.Sel.Name
+						baseType = "*" + pkg + "." + sel
+					default:
+						fmt.Printf("Unsupported pointer type in %s\n", ts.Name.Name)
+						continue
+					}
 				default:
+					fmt.Printf("Unsupported type in %s\n", ts.Name.Name)
 					continue
 				}
 
