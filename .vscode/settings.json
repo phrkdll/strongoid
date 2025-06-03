@@ -1,0 +1,11 @@
+{
+    "go.coverOnSave": true,
+    "go.coverageDecorator": {
+        "type": "gutter",
+        "coveredGutterStyle": "blockgreen",
+        "uncoveredGutterStyle": "blockred",
+    },
+    "go.testOnSave": true,
+    "go.vetOnSave": "workspace",
+    "go.coverOnSingleTest": true
+}
