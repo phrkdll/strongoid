@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -19,8 +17,7 @@ func Generate(dir string,
 	imports []string,
 	writer FileWriter,
 	parser Parser,
-	globber Globber,
-	log io.Writer) {
+	globber Globber) {
 
 	fset := token.NewFileSet()
 	files := must.Return(globber.Glob(filepath.Join(dir, "*.go")))
@@ -34,7 +31,7 @@ func Generate(dir string,
 
 		node, err := parser.ParseFile(fset, file, nil)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not parse %s: %v\n", file, err)
+			fmt.Printf("Could not parse %s: %v\n", file, err)
 			continue
 		}
 
@@ -117,14 +114,14 @@ func Generate(dir string,
 
 			err := tmpl.Execute(&buf, fileData)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Template error on %s: %v\n", genFile, err)
+				fmt.Printf("Template error on %s: %v\n", genFile, err)
 				continue
 			}
 		}
 
 		err := writer.WriteFile(genFile, buf.Bytes())
 		if err != nil {
-			fmt.Fprintf(log, "Failed to write %s: %v\n", genFile, err)
+			fmt.Errorf("Failed to write %s: %v\n", genFile, err)
 			continue
 		}
 

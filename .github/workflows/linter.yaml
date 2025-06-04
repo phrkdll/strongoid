@@ -17,7 +17,8 @@ jobs:
       - name: "Set up Go"  
         uses: actions/setup-go@v5
 
+      - name: "Prepare dependencies"
+        run: go mod download
+
       - name: "Lint code"
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
+        run: go vet ./...

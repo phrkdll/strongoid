@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"bytes"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -49,7 +48,6 @@ func TestGenerate(t *testing.T) {
 	}
 
 	writer := &mockFileWriter{}
-	var logBuf bytes.Buffer
 
 	parser := mockParser{
 		Sources: map[string]string{
@@ -69,7 +67,6 @@ func TestGenerate(t *testing.T) {
 			writer,
 			parser,
 			glob,
-			&logBuf,
 		)
 	})
 
@@ -84,7 +81,4 @@ func TestGenerate(t *testing.T) {
 			t.Errorf("Generated content for %s does not contain expected function", name)
 		}
 	}
-
-	// Make log output visible
-	t.Logf("LOG:\n%s", logBuf.String())
 }
