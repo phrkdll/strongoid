@@ -121,7 +121,7 @@ func Generate(dir string,
 
 		err := writer.WriteFile(genFile, buf.Bytes())
 		if err != nil {
-			fmt.Errorf("Failed to write %s: %v\n", genFile, err)
+			fmt.Printf("Failed to write %s: %v\n", genFile, err)
 			continue
 		}
 
