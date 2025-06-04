@@ -12,11 +12,9 @@ threshold:
   # (optional; default 0)
   # Minimum coverage percentage required for individual files.
   file: 50
-
   # (optional; default 0)
   # Minimum coverage percentage required for each package.
   package: 65
-
   # (optional; default 0)
   # Minimum overall project coverage percentage required.
   total: 80
@@ -41,7 +39,7 @@ exclude:
     #- \.pb\.go$    # excludes all protobuf generated files
     #- ^pkg/bar     # exclude package `pkg/bar`
     - ^cmd/gen
-    - ^internal/generator/generator\.go$
+    - ^internal/generator/(?!generator)\.go$
     - ^pkg/strongoid/db.go
     - ^pkg/strongoid/id.go
 
