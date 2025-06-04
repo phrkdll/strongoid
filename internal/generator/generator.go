@@ -1,36 +1,29 @@
 package generator
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/phrkdll/must/pkg/must"
 )
 
-type TypeInfo struct {
-	Name     string
-	BaseType string
-}
-
-type FileTypes struct {
-	File    string
-	Package string
-	Imports []string
-	Types   []TypeInfo
-}
-
-func Generate(methodTemplates, imports []string) {
-	dir := "."
+func Generate(dir string,
+	templates []string,
+	imports []string,
+	writer FileWriter,
+	globber Globber,
+	log io.Writer) {
 
 	fset := token.NewFileSet()
-	files, err := filepath.Glob(filepath.Join(dir, "*.go"))
-	if err != nil {
-		panic(err)
-	}
+	files := must.Return(globber.Glob(filepath.Join(dir, "*.go")))
 
 	fileMap := map[string]*FileTypes{}
 
@@ -66,6 +59,7 @@ func Generate(methodTemplates, imports []string) {
 				if !ok || selExpr.Sel.Name != "Id" {
 					continue
 				}
+
 				pkgIdent, ok := selExpr.X.(*ast.Ident)
 				if !ok || pkgIdent.Name != "strongoid" {
 					continue
@@ -116,34 +110,34 @@ func Generate(methodTemplates, imports []string) {
 	// Generate for each source file
 	for src, fileData := range fileMap {
 		genFile := strings.TrimSuffix(src, ".go") + ".gen.go"
+		var buf bytes.Buffer
 
-		f, err := os.Create(genFile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", genFile, err)
-			continue
-		}
-
-		for _, mt := range methodTemplates {
-
+		for _, mt := range templates {
 			tmpl := template.Must(template.New("strongoid").Parse(mt))
 
-			err = tmpl.Execute(f, fileData)
+			err := tmpl.Execute(&buf, fileData)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Template error on %s: %v\n", genFile, err)
-				_ = f.Close()
 				continue
 			}
 		}
 
-		_ = f.Close()
+		err := writer.WriteFile(genFile, buf.Bytes())
+		if err != nil {
+			fmt.Fprintf(log, "Failed to write %s: %v\n", genFile, err)
+			continue
+		}
+
 		fmt.Printf("Generated '%s' for %s in '%s'\n", genFile, joinTypeNames(fileData.Types), src)
 	}
 }
 
 func joinTypeNames(types []TypeInfo) string {
 	var names []string
+
 	for _, t := range types {
 		names = append(names, t.Name)
 	}
+
 	return strings.Join(names, ", ")
 }
