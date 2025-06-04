@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"io"
 	"os"
@@ -19,6 +18,7 @@ func Generate(dir string,
 	templates []string,
 	imports []string,
 	writer FileWriter,
+	parser Parser,
 	globber Globber,
 	log io.Writer) {
 
@@ -32,7 +32,7 @@ func Generate(dir string,
 			continue
 		}
 
-		node, err := parser.ParseFile(fset, file, nil, 0)
+		node, err := parser.ParseFile(fset, file, nil)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Could not parse %s: %v\n", file, err)
 			continue

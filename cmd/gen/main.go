@@ -36,5 +36,5 @@ func main() {
 		templates = append(templates, jsonTemplate)
 	}
 
-	generator.Generate(".", templates, imports, generator.OSFileWriter{}, generator.RealGlobber{}, os.Stdout)
+	generator.Generate(".", templates, imports, generator.OSFileWriter{}, generator.RealParser{}, generator.RealGlobber{}, os.Stdout)
 }
