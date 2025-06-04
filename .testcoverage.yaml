@@ -39,7 +39,9 @@ exclude:
     #- \.pb\.go$    # excludes all protobuf generated files
     #- ^pkg/bar     # exclude package `pkg/bar`
     - ^cmd/gen
-    - ^internal/generator/($generator)*go$
+    - ^internal/generator/file_writer.go
+    - ^internal/generator/globber.go
+    - ^internal/generator/parser.go
     - ^pkg/strongoid/db.go
     - ^pkg/strongoid/id.go
 
