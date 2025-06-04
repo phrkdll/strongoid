@@ -41,6 +41,9 @@ exclude:
     #- \.pb\.go$    # excludes all protobuf generated files
     #- ^pkg/bar     # exclude package `pkg/bar`
     - ^cmd/gen
+    - ^internal/generator/generator\.go$
+    - ^pkg/strongoid/db.go
+    - ^pkg/strongoid/id.go
 
 # File name of go-test-coverage breakdown file, which can be used to
 # analyze coverage difference.
