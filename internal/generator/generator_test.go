@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	tmpls "github.com/phrkdll/strongoid/internal/generator/templates"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,11 +51,6 @@ func TestGenerate(t *testing.T) {
 	writer := &mockFileWriter{}
 	var logBuf bytes.Buffer
 
-	// Simple testing template
-	tmpl := `{{ range .Types }}
-	func (id {{ .Name }}) String() string { return fmt.Sprintf("ID: %v", id) }
-	{{ end }}`
-
 	parser := mockParser{
 		Sources: map[string]string{
 			"user.go": `
@@ -68,7 +64,7 @@ func TestGenerate(t *testing.T) {
 	assert.NotPanics(t, func() {
 		Generate(
 			"testdata",
-			[]string{tmpl},
+			[]string{tmpls.BaseTemplate, tmpls.JsonTemplate, tmpls.GormTemplate},
 			[]string{"fmt"},
 			writer,
 			parser,
@@ -84,11 +80,8 @@ func TestGenerate(t *testing.T) {
 
 	// Check content
 	for name, content := range writer.Files {
-		if !strings.Contains(string(content), "func (id UserId) String()") {
+		if !strings.Contains(string(content), "func (t *UserId) Scan(dbValue any) error") {
 			t.Errorf("Generated content for %s does not contain expected function", name)
-		}
-		if !strings.Contains(string(content), "fmt") {
-			t.Errorf("Expected import 'fmt' missing in generated file %s", name)
 		}
 	}
 

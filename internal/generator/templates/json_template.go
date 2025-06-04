@@ -1,6 +1,6 @@
-package main
+package templates
 
-const jsonTemplate = `{{ range .Types }}
+const JsonTemplate = `{{ range .Types }}
 func (t {{ .Name }}) MarshalJSON() ([]byte, error) {
 	return strongoid.Id[{{ .BaseType }}](t).MarshalJSON()
 }

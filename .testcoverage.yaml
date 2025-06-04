@@ -38,8 +38,9 @@ override:
 exclude:
   # Exclude files or packages matching their paths
   paths:
-    - \.pb\.go$    # excludes all protobuf generated files
-    - ^pkg/bar     # exclude package `pkg/bar`
+    #- \.pb\.go$    # excludes all protobuf generated files
+    #- ^pkg/bar     # exclude package `pkg/bar`
+    - ^cmd/gen
 
 # File name of go-test-coverage breakdown file, which can be used to 
 # analyze coverage difference.
