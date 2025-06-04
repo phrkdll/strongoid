@@ -1,4 +1,4 @@
-# strongoid
+# strongoid ![coverage](https://raw.githubusercontent.com/phrkdll/strongoid/badges/.badges/main/coverage.svg)
 
 A simple approach to strongly typed IDs in Go. Avoid confusing IDs because all of them have the same primitive type.
 
