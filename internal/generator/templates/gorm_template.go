@@ -1,6 +1,6 @@
-package main
+package templates
 
-const gormTemplate = `{{ range .Types }}
+const GormTemplate = `{{ range .Types }}
 func (t *{{ .Name }}) Scan(dbValue any) error {
 	return (*strongoid.Id[{{ .BaseType }}])(t).Scan(dbValue)
 }

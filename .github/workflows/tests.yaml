@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - "*"
+  push:
+    branches:
+      - 'main'
 
 jobs:
   build:
@@ -21,4 +24,9 @@ jobs:
         run: go mod download
 
       - name: "Run tests"
-        run: go test -race ./...
+        run: go test -race ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+
+      - name: "Check coverage"
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yaml

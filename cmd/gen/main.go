@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/phrkdll/strongoid/internal/generator"
+	tmpls "github.com/phrkdll/strongoid/internal/generator/templates"
 )
 
 var (
@@ -25,16 +26,16 @@ func main() {
 	modules := strings.Split(*modulesFlag, ",")
 
 	imports := []string{"github.com/phrkdll/strongoid/pkg/strongoid"}
-	templates := []string{baseTemplate}
+	templates := []string{tmpls.BaseTemplate}
 
 	if slices.Contains(modules, "gorm") {
 		imports = append(imports, "database/sql/driver")
-		templates = append(templates, gormTemplate)
+		templates = append(templates, tmpls.GormTemplate)
 	}
 
 	if slices.Contains(modules, "json") {
-		templates = append(templates, jsonTemplate)
+		templates = append(templates, tmpls.JsonTemplate)
 	}
 
-	generator.Generate(templates, imports)
+	generator.Generate(".", templates, imports, generator.OSFileWriter{}, generator.RealParser{}, generator.RealGlobber{})
 }
