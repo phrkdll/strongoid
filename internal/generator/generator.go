@@ -20,7 +20,7 @@ func Generate(dir string,
 	globber Globber) {
 
 	fset := token.NewFileSet()
-	files := must.Return(globber.Glob(filepath.Join(dir, "*.go")))
+	files := must.Return(globber.Glob(filepath.Join(dir, "*.go"))).ElsePanic()
 
 	fileMap := map[string]*FileTypes{}
 
