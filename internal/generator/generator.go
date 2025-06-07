@@ -6,18 +6,31 @@ import (
 	"go/ast"
 	"go/token"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/phrkdll/must/pkg/must"
+	tmpls "github.com/phrkdll/strongoid/internal/generator/templates"
 )
 
 func Generate(dir string,
-	templates []string,
-	imports []string,
+	modules []string,
 	writer FileWriter,
 	parser Parser,
 	globber Globber) {
+
+	imports := []string{"github.com/phrkdll/strongoid/pkg/strongoid"}
+	templates := []string{tmpls.BaseTemplate}
+
+	if slices.Contains(modules, "gorm") {
+		imports = append(imports, "database/sql/driver")
+		templates = append(templates, tmpls.GormTemplate)
+	}
+
+	if slices.Contains(modules, "json") {
+		templates = append(templates, tmpls.JsonTemplate)
+	}
 
 	fset := token.NewFileSet()
 	files := must.Return(globber.Glob(filepath.Join(dir, "*.go"))).ElsePanic()

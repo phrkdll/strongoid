@@ -1,4 +1,4 @@
-package generator
+package generator_test
 
 import (
 	"go/ast"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	tmpls "github.com/phrkdll/strongoid/internal/generator/templates"
+	"github.com/phrkdll/strongoid/internal/generator"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,10 +60,9 @@ func TestGenerate(t *testing.T) {
 	}
 
 	assert.NotPanics(t, func() {
-		Generate(
+		generator.Generate(
 			"testdata",
-			[]string{tmpls.BaseTemplate, tmpls.JsonTemplate, tmpls.GormTemplate},
-			[]string{"fmt"},
+			[]string{"gorm", "json"},
 			writer,
 			parser,
 			glob,
