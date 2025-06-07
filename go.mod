@@ -3,7 +3,7 @@ module github.com/phrkdll/strongoid
 go 1.24.3
 
 require (
-	github.com/phrkdll/must v0.4.0
+	github.com/phrkdll/must v0.5.0
 	github.com/stretchr/testify v1.10.0
 )
 
