@@ -2,7 +2,11 @@ package strongoid
 
 import (
 	"database/sql/driver"
-	"fmt"
+	"errors"
+)
+
+var (
+	ErrUnsupportedData = errors.New("unsupported data")
 )
 
 func (id *Id[T]) Scan(dbValue any) (err error) {
@@ -10,7 +14,7 @@ func (id *Id[T]) Scan(dbValue any) (err error) {
 	case T:
 		id.Inner = value
 	default:
-		return fmt.Errorf("unsupported data %#v", dbValue)
+		return ErrUnsupportedData
 	}
 	return nil
 }

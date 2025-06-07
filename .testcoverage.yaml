@@ -14,10 +14,10 @@ threshold:
   file: 50
   # (optional; default 0)
   # Minimum coverage percentage required for each package.
-  package: 50
+  package: 65
   # (optional; default 0)
   # Minimum overall project coverage percentage required.
-  total: 50
+  total: 80
 
 # Holds regexp rules which will override thresholds for matched files or packages
 # using their paths.
@@ -41,10 +41,7 @@ exclude:
     - ^cmd/gen
     - ^internal/generator/file_writer.go
     - ^internal/generator/globber.go
-    - ^internal/generator/generator.go
     - ^internal/generator/parser.go
-    - ^pkg/strongoid/db.go
-    - ^pkg/strongoid/id.go
 
 # File name of go-test-coverage breakdown file, which can be used to
 # analyze coverage difference.

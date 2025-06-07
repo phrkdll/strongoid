@@ -1,4 +1,4 @@
-package generator
+package generator_test
 
 import (
 	"go/ast"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	tmpls "github.com/phrkdll/strongoid/internal/generator/templates"
+	"github.com/phrkdll/strongoid/internal/generator"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,10 +60,9 @@ func TestGenerate(t *testing.T) {
 	}
 
 	assert.NotPanics(t, func() {
-		Generate(
+		generator.Generate(
 			"testdata",
-			[]string{tmpls.BaseTemplate, tmpls.JsonTemplate, tmpls.GormTemplate},
-			[]string{"fmt"},
+			[]string{"gorm", "json"},
 			writer,
 			parser,
 			glob,
@@ -80,5 +79,203 @@ func TestGenerate(t *testing.T) {
 		if !strings.Contains(string(content), "func (t *UserId) Scan(dbValue any) error") {
 			t.Errorf("Generated content for %s does not contain expected function", name)
 		}
+	}
+}
+func TestGenerate_SkipsTestAndGenFiles(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"user.go", "user_test.go", "user.gen.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"user.go": `
+				package example
+				import "strongoid"
+				type UserId strongoid.Id[int64]
+			`,
+			"user_test.go": `
+				package example
+				import "strongoid"
+				type ShouldSkip strongoid.Id[int64]
+			`,
+			"user.gen.go": `
+				package example
+				import "strongoid"
+				type ShouldSkipGen strongoid.Id[int64]
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{"gorm", "json"},
+		writer,
+		parser,
+		glob,
+	)
+	if len(writer.Files) != 1 {
+		t.Errorf("Expected only 1 file to be generated, got %d", len(writer.Files))
+	}
+	for name := range writer.Files {
+		if name != "user.gen.go" {
+			t.Errorf("Expected generated file to be user.gen.go, got %s", name)
+		}
+	}
+}
+
+func TestGenerate_SkipsInvalidAST(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"broken.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"broken.go": `
+				package example
+				type NotStrongOid int
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{"gorm"},
+		writer,
+		parser,
+		glob,
+	)
+	if len(writer.Files) != 0 {
+		t.Errorf("Expected no files to be generated for invalid AST, got %d", len(writer.Files))
+	}
+}
+
+func TestGenerate_UnsupportedPointerType(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"ptr.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"ptr.go": `
+				package example
+				import "strongoid"
+				type PtrId strongoid.Id[*chan int]
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{},
+		writer,
+		parser,
+		glob,
+	)
+	if len(writer.Files) != 0 {
+		t.Errorf("Expected no files to be generated for unsupported pointer type, got %d", len(writer.Files))
+	}
+}
+
+func TestGenerate_SelectorExprBaseType(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"selector.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"selector.go": `
+				package example
+				import (
+					"strongoid"
+					"foo"
+				)
+				type FooId strongoid.Id[foo.Bar]
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{"json"},
+		writer,
+		parser,
+		glob,
+	)
+	if len(writer.Files) != 1 {
+		t.Errorf("Expected 1 file to be generated for selector expr, got %d", len(writer.Files))
+	}
+	for _, content := range writer.Files {
+		if !strings.Contains(string(content), "FooId") {
+			t.Errorf("Generated content does not contain expected type FooId")
+		}
+	}
+}
+
+func TestGenerate_StarSelectorExprBaseType(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"starselector.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"starselector.go": `
+				package example
+				import (
+					"strongoid"
+					"foo"
+				)
+				type FooPtrId strongoid.Id[*foo.Bar]
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{"json"},
+		writer,
+		parser,
+		glob,
+	)
+	if len(writer.Files) != 1 {
+		t.Errorf("Expected 1 file to be generated for star selector expr, got %d", len(writer.Files))
+	}
+	for _, content := range writer.Files {
+		if !strings.Contains(string(content), "FooPtrId") {
+			t.Errorf("Generated content does not contain expected type FooPtrId")
+		}
+	}
+}
+
+func TestGenerate_UsesCorrectTemplates(t *testing.T) {
+	glob := mockGlobber{
+		Files: []string{"user.go"},
+	}
+	writer := &mockFileWriter{}
+	parser := mockParser{
+		Sources: map[string]string{
+			"user.go": `
+				package example
+				import "strongoid"
+				type UserId strongoid.Id[int64]
+			`,
+		},
+	}
+	generator.Generate(
+		"testdata",
+		[]string{"gorm", "json"},
+		writer,
+		parser,
+		glob,
+	)
+	foundGorm := false
+	foundJson := false
+	for _, content := range writer.Files {
+		if strings.Contains(string(content), "Scan(dbValue any) error") {
+			foundGorm = true
+		}
+		if strings.Contains(string(content), "MarshalJSON") {
+			foundJson = true
+		}
+	}
+	if !foundGorm {
+		t.Errorf("Expected generated file to contain GORM methods")
+	}
+	if !foundJson {
+		t.Errorf("Expected generated file to contain JSON methods")
 	}
 }
